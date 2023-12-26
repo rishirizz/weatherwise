@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 import 'package:weatherwise/api_service/weather_service.dart';
 import 'package:weatherwise/models/weather_model.dart';
+import 'package:weatherwise/provider/theme_provider.dart';
 
 import '../constants/constants.dart';
 import '../widgets/loading_weather.dart';
@@ -76,6 +78,35 @@ class _WeatherPageState extends State<WeatherPage> {
                   Expanded(
                     child: weatherDetails(),
                   ),
+                  Consumer<ThemeProvider>(
+                    builder: (context, ThemeProvider themeProvider, child) =>
+                        Padding(
+                      padding: const EdgeInsets.all(30.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            themeProvider.isDark ? 'Light Theme' : 'Dark Theme',
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              themeProvider.isDark
+                                  ? Icons.nightlight_round
+                                  : Icons.wb_sunny,
+                              color: themeProvider.isDark
+                                  ? Colors.grey
+                                  : Colors.yellow,
+                            ),
+                            onPressed: () {
+                              themeProvider.isDark
+                                  ? themeProvider.isDark = false
+                                  : themeProvider.isDark = true;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
                 ],
               )
             : const LoadingWeatherData(),
@@ -93,8 +124,8 @@ class _WeatherPageState extends State<WeatherPage> {
               ? cityWeather!.cityName
               : 'Loading city Name...',
           style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
         ),
         Lottie.asset(
@@ -107,8 +138,9 @@ class _WeatherPageState extends State<WeatherPage> {
               ? '${(cityWeather!.temperature.round() - 273.15).toStringAsFixed(1)} °C'
               : 'loading temperature...',
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
+            letterSpacing: 3,
           ),
         ),
       ],
