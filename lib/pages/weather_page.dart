@@ -16,6 +16,9 @@ class WeatherPage extends StatefulWidget {
 class _WeatherPageState extends State<WeatherPage> {
   final WeatherService weatherService = WeatherService(kAPIKey);
   Weather? cityWeather;
+  TextEditingController cityNameController = TextEditingController();
+  bool isSearched = false;
+  bool isAPICallProcess = false;
 
   @override
   void initState() {
@@ -27,8 +30,54 @@ class _WeatherPageState extends State<WeatherPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: (cityWeather != null)
-            ? weatherDetails()
+        child: (cityWeather != null && isAPICallProcess == false)
+            ? Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: MediaQuery.of(context).size.height * 0.08,
+                      left: 20,
+                      right: 20,
+                    ),
+                    child: SearchBar(
+                      controller: cityNameController,
+                      hintText: 'Search City.',
+                      onSubmitted: (val) {
+                        cityNameController.text = val;
+                        isSearched = true;
+                        getWeatherForTheCitySearched(cityNameController.text);
+                        if (cityNameController.text.isEmpty) {
+                          getCurrentWeather();
+                        }
+                      },
+                      trailing: [
+                        IconButton(
+                          tooltip: 'Search',
+                          onPressed: () {
+                            isSearched = !isSearched;
+                            if (isSearched == false) {
+                              getCurrentWeather();
+                              setState(() {
+                                cityNameController.clear();
+                              });
+                            } else {
+                              getWeatherForTheCitySearched(
+                                cityNameController.text,
+                              );
+                            }
+                          },
+                          icon: Icon(
+                            (isSearched == false) ? Icons.search : Icons.clear,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: weatherDetails(),
+                  ),
+                ],
+              )
             : const LoadingWeatherData(),
       ),
     );
@@ -66,13 +115,32 @@ class _WeatherPageState extends State<WeatherPage> {
     );
   }
 
+  getWeatherForTheCitySearched(String cityName) async {
+    try {
+      setState(() {
+        isAPICallProcess = true;
+      });
+      final weather = await weatherService.getWeather(cityName);
+      setState(() {
+        cityWeather = weather;
+        isAPICallProcess = false;
+      });
+    } catch (e) {
+      debugPrint('$e');
+    }
+  }
+
   getCurrentWeather() async {
     String cityName = await weatherService.getCurrentCity();
     debugPrint('Current city is $cityName');
     try {
+      setState(() {
+        isAPICallProcess = true;
+      });
       final weather = await weatherService.getWeather(cityName);
       setState(() {
         cityWeather = weather;
+        isAPICallProcess = false;
       });
     } catch (e) {
       debugPrint('$e');
